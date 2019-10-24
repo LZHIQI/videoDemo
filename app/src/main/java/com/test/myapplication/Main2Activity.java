@@ -1,7 +1,9 @@
 package com.test.myapplication;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -18,10 +21,10 @@ import android.widget.VideoView;
 public class Main2Activity extends AppCompatActivity {
 
     RecyclerView recyclerView;
-    VideoView tvBg;
+    SurfaceView surfaceView;
     LinearLayoutManager linearLayoutManager;
     private int startPosition = 0;
-
+    MyPlayerUtils myPlayerUtils;
     String[] videoUrls = {
             "http://data.yibenjiankang.com/userunmodifieddata/201910/pFvlviHO3E9kLUyvVIFgKZ66HArMrIq10Dg8ZMNMn5iRkuIGwzS3ToDA9D6sAkuz.mp4",
             "http://data.yibenjiankang.com/userdata/cad9146e728a48f7882aa16746a20040/videos/20190719/1563504188635.mp4",
@@ -43,26 +46,8 @@ public class Main2Activity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
         PagerSnapHelper pagerSnapHelper = new PagerSnapHelper();
         pagerSnapHelper.attachToRecyclerView(recyclerView);
-        tvBg = findViewById(R.id.tv_bg);
-        tvBg.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-
-            }
-        });
-
-        tvBg.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-
-            }
-        });
-        tvBg.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                return false;
-            }
-        });
+        surfaceView = findViewById(R.id.tv_bg);
+        myPlayerUtils=new MyPlayerUtils(surfaceView);
         recyclerView.setAdapter(new RecyclerView.Adapter<MyViewHolder>() {
             @NonNull
             @Override
@@ -89,16 +74,16 @@ public class Main2Activity extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                Log.e("onScrolled", "dx   " + dx);
+             //   Log.e("onScrolled", "dx   " + dx);
                 View view = recyclerView.getChildAt(0);
                 int firstItem = recyclerView.getChildLayoutPosition(view);
-                Log.e("滑动到指定位置", "         view    " + firstItem + "               " + view.getX());
+             //   Log.e("滑动到指定位置", "         view    " + firstItem + "               " + view.getX());
 
                 View view2 = recyclerView.getChildAt(recyclerView.getChildCount() - 1);
                 int lastItem = recyclerView.getChildLayoutPosition(view2);
-                Log.e("滑动到指定位置", "        view2    " + lastItem + "                " + view2.getPivotX());
+              //  Log.e("滑动到指定位置", "        view2    " + lastItem + "                " + view2.getPivotX());
                 boolean start = (firstItem == lastItem);
-                transfer(dx, start, firstItem, lastItem, tvBg);
+                transfer(dx, start, firstItem, lastItem, surfaceView);
             }
         });
 
@@ -119,14 +104,16 @@ public class Main2Activity extends AppCompatActivity {
         return this;
     }
 
-    public void transfer(int transfer, boolean start, int firstItem, int lastItem, final View view) {
+    public void transfer(int transfer, boolean start, int firstItem,final int lastItem, final View view) {
         startPosition = startPosition - transfer;
         if (start) {
             startPosition = 0;
-            stopPlayback();
-
-            tvBg.setVideoPath(videoUrls[lastItem]);
-            startVideo();
+            surfaceView.post(new Runnable() {
+                @Override
+                public void run() {
+                    myPlayerUtils.play( videoUrls[lastItem]);
+                }
+            });
         }
         view.layout(startPosition, view.getTop(), startPosition + view.getWidth(), view.getBottom());
 
@@ -138,46 +125,22 @@ public class Main2Activity extends AppCompatActivity {
 
     }
 
+
+
     @Override
     protected void onPause() {
         super.onPause();
+        myPlayerUtils.pause();
     }
 
-
-    public void startVideo() {
-        if (tvBg != null) {
-            tvBg.start();
-        }
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
-
-    public void pauseVideo() {
-        if (tvBg != null) {
-            tvBg.start();
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        myPlayerUtils.onResume();
     }
-
-    public void resumeVideo() {
-        if (tvBg != null) {
-            tvBg.resume();
-        }
-    }
-
-
-    public void stopPlayback() {
-        if (tvBg != null) {
-            Log.e("stopPlayback","1111");
-            tvBg.stopPlayback();
-        }
-    }
-    public void seekTo(int msec) {
-        if (tvBg != null) {
-            tvBg.seekTo(msec);
-        }
-    }
-
-
-
-
-
 }

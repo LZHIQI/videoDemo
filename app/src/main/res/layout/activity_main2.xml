@@ -13,7 +13,7 @@
 
     </android.support.v7.widget.RecyclerView>
 
-    <VideoView
+    <SurfaceView
         android:id="@+id/tv_bg"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
